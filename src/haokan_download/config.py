@@ -14,3 +14,5 @@ elif sysName == "Linux":
 else:
     print("本程序不支持当前操作系统")
     exit()
+part = __file__.rpartition('\\')
+config["sysHome"] = part[0]

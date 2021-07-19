@@ -3,3 +3,4 @@
 /build/*
 __pycache__/
 haokan_download_icexmoon.egg-info/
+*/haokan_download/tmp/*

@@ -1,14 +1,13 @@
 import requests
 from bs4 import BeautifulSoup
-import pprint
-import os
-import json
-import jsonlines
 import random
 import time
+from .cache.cache_manager import CacheManager
 
 
 class HaokanAuthor():
+    TEN_HOURS = 10*3600
+
     def __init__(self, authorId):
         self.authorId = authorId
         self.name = ""
@@ -64,9 +63,13 @@ class HaokanAuthor():
         return self.name
 
     def getAuthorNameFromWeb(self):
+        # 优先从缓存获取数据
+        cachedKey = "getAuthorNameFromWeb.{}".format(self.authorId)
+        cache = CacheManager.getCache()
+        cachedData = cache.getCachedData(cachedKey, self.__class__.TEN_HOURS)
+        if cachedData is not None:
+            return cachedData
         url = "https://haokan.hao123.com/author/"+self.authorId
-        # resp = requests.get(
-        #     "https://haokan.hao123.com/author/"+self.authorId, headers=self.headers, proxies=self.proxies)
         resp = self.tryRequestGet(url)
         # 中文页面有时候需要指定页面编码，否则会乱码
         resp.encoding = 'UTF-8'
@@ -75,6 +78,9 @@ class HaokanAuthor():
         # 获取视频作者名字
         authorNameTag = authorPageDom.find("h1", class_="uinfo-head-name")
         authorName = authorNameTag.string
+        # 缓存数据
+        cache.addCachedData(cachedKey, authorName)
+        cache.save()
         return authorName
 
     def getVideoList(self):
@@ -84,31 +90,35 @@ class HaokanAuthor():
         # videoSrc1="http://haokan.hao123.com/v?vid=15779938508150317940"
         # videoSrc2="http://haokan.hao123.com/v?vid=10123773370840967415"
         # return [{"videoName":videoName1,"videoSrc":videoSrc1},{"videoName":videoName2,"videoSrc":videoSrc2}]
+        # 优先从缓存获取数据
+        cache = CacheManager.getCache()
+        cachedKey = "getVideoList.{}".format(self.authorId)
+        cachedData = cache.getCachedData(cachedKey, self.__class__.TEN_HOURS)
+        if cachedData is not None:
+            self.videoList = cachedData
         if len(self.videoList) > 0:
             return self.videoList
         self.dealHaokanResponse("https://haokan.hao123.com/author/" +
                                 self.authorId+"?_format=json&rn=16&ctime=0&_api=1")
+        # 保存数据到缓存
+        cache.addCachedData(cachedKey, self.videoList)
+        cache.save()
         return self.videoList
 
     def dealResponse(self, response):
         ctime = response['ctime']
         results = response['results']
-        # downloader=DownloadHelp()
         if len(results) > 0:
             for video in results:
                 videoContent = video['content']
                 videoName = videoContent['title']
-                # videoSrc=videoContent['video_src']
                 vid = videoContent['vid']
                 videoSrc = "https://haokan.baidu.com/v?vid={!s}".format(vid)
                 self.videoList.append(
                     {"videoName": videoName+'.flv', "videoSrc": videoSrc})
-                # downloader.download(videoSrc,videoName+'.flv')
-                # common.any_download(url=videoSrc,output_dir="d:\\download",merge=True,info_only=False,stream_id="flv")
         return "https://haokan.hao123.com/author/"+self.authorId+"?_format=json&rn=16&ctime="+str(ctime)+"&_api=1"
 
     def dealHaokanResponse(self, url):
-        # resp = requests.get(url, headers=self.headers, proxies=self.proxies)
         resp = self.tryRequestGet(url)
         respJson = resp.json()
         response = respJson['data']['video']
