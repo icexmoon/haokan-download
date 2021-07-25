@@ -9,9 +9,9 @@
 - 禁止将本程序用于商业用途。
 - 本程序使用Python编写，需要Python环境支持。
 - 本程序并未使用多线程，出于作者懒和减少服务器压力的原因。
-- 核心的下载服务依赖于you-get，感谢you-get项目。
+- 核心的下载服务依赖于you-get，通过命令行进行调用，所以请确保你的电脑可以在命令行正常执行`you-get xxx`。
 - 下载结果会保存在命令行的当前工作目录，请确保当前目录有足够空间。
-- 经过测试发现you-get对haokan视频的支持并不完善，已经有人提交[**pull**](https://github.com/soimort/you-get/pull/2879)改善，但尚未合并到主分支，所以需要自己手动打包安装该分支代码。
+- 经过测试发现you-get对haokan视频的支持并不完善，已经有人提交[**pull**](https://github.com/soimort/you-get/pull/2879)改善，但尚未合并到主分支，所以需要自己手动打包安装该分支代码，或者下载并安装我打包的版本[**you_get-0.4.1500-py3-none-any.whl**](https://github.com/icexmoon/haokan-download/blob/main/you_get-0.4.1500-py3-none-any.whl)。
   
 ## 安装
 
